@@ -2,7 +2,7 @@ name: Train and Deploy
 
 on:
   push:
-    branches: [ feature/deploy ]
+    branches: [ develop ]
 
 jobs:
   test:
