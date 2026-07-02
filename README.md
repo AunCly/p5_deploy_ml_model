@@ -1,3 +1,12 @@
+---
+title: Api de prédiction du turnover
+emoji: 📊
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+python_version: "3.13"
+---
+
 # Déployez votre modèle de Machine Learning
 
 ## Mission
