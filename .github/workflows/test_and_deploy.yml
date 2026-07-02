@@ -10,6 +10,8 @@ jobs:
 
     steps:
       - name: Checkout code
+        with:
+          lfs: true
         uses: actions/checkout@v4
 
       - name: Install uv
