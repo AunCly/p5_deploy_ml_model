@@ -1,0 +1,6 @@
+{
+  "version": "20260701_155446",
+  "n_features_out": 15,
+  "target": "a_quitte_l_entreprise",
+  "sklearn_version": "1.9.0"
+}
