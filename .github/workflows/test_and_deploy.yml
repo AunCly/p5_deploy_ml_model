@@ -2,7 +2,7 @@ name: Train and Deploy
 
 on:
   push:
-    branches: [ feature/cd_on_huggingface ]
+    branches: [ feature/deploy ]
 
 jobs:
   test:
