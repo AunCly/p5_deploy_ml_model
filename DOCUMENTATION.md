@@ -55,74 +55,29 @@ L'historique de toutes les prédictions est persisté en base PostgreSQL.
 
 ## 3. Architecture du projet
 
-```
-.
-├── .github/
-│   └── workflows/
-│       ├── test.yml                   # CI : tests sur la branche develop
-│       └── test_and_deploy.yml        # CI/CD : tests + déploiement sur main
-├── data/
-│   └── raw/
-│       ├── extrait_sirh.csv           # Données RH brutes
-│       ├── extrait_eval.csv           # Données d'évaluation
-│       └── extrait_sondage.csv        # Données de sondage
-├── database/
-│   ├── database.py                    # Connexion, création et accès à la BDD
-│   ├── seeding.py                     # Peuplement initial de la BDD
-│   └── structure.sql                  # Schéma SQL des tables
-├── models/
-│   ├── compiled/
-│   │   ├── classification_model.joblib       # Modèle LogisticRegression sérialisé
-│   │   ├── classification_preprocessor.joblib # Pipeline de préprocessing
-│   │   └── metadata_20260701_155446.json      # Métadonnées du modèle
-│   ├── predictor.py                   # Classe AttritionPredictor
-│   ├── preprocessing.py               # Encodage et nettoyage des données
-│   ├── technova_features.py           # Transformer : feature engineering
-│   ├── technova_correlation_cleaning.py # Transformer : filtre de corrélation
-│   └── utils.py                       # Utilitaires d'entraînement
-├── notebooks/
-│   ├── analyze.ipynb                  # Exploration et analyse des données
-│   ├── cleaning.ipynb                 # Nettoyage des données
-│   └── training.ipynb                 # Entraînement du modèle
-├── tests/
-│   └── test_main.py                   # Suite de tests pytest
-├── .env.example                       # Template des variables d'environnement
-├── .gitattributes                     # Config Git LFS (.joblib → LFS)
-├── docker-compose.yml                 # Services Docker (db + api)
-├── Dockerfile                         # Image de l'API
-├── employee.py                        # Modèle Pydantic EmployeeData
-├── main.py                            # Application FastAPI
-└── pyproject.toml                     # Déclaration des dépendances (uv)
-```
+- .github/workflows/ : pipelines CI/CD GitHub Actions
+- data/raw/ : fichiers CSV bruts (SIRH, évaluations, sondages
+- database/ : scripts de création et peuplement de la base PostgreSQL
+- models/ : code du modèle de ML, pipeline de préprocessing et utilitaires
+- notebooks/ : notebooks Jupyter d'exploration et d'analyse des données
+- tests/ : tests unitaires et fonctionnels avec Pytest
+- .env.example : template des variables d'environnement
+- docker-compose.yml : configuration des services Docker (API + BDD)
+- Dockerfile : image Docker de l'API FastAPI
+- employee.py : modèle Pydantic pour la validation des données d'entrée
+- main.py : point d'entrée de l'application FastAPI
+- pyproject.toml : déclaration des dépendances et configuration du projet
+- README.md : présentation du projet et instructions d'installation
+- DOCUMENTATION.md : documentation technique détaillée (ce fichier)
 
 ### Flux de données
 
-```
-Requête POST /predict
-        │
-        ▼
-  Validation Pydantic (EmployeeData)
-        │
-        ▼
-  Encodage catégoriel (preprocessing.py)
-        │
-        ▼
-  Pipeline scikit-learn
-  ├── TechnovaFeatures (feature engineering)
-  ├── TechnovaCorrelationCleaning (filtre corrélation > 0.80)
-  └── Transformations numériques
-        │
-        ▼
-  Modèle LogisticRegression → prediction + probability
-        │
-        ▼
-  Sauvegarde en base PostgreSQL (hors production)
-        │
-        ▼
-  Réponse JSON {employee_id, prediction, probability}
-```
-
----
+1. Le client envoie une requête POST à l'endpoint `/predict` avec les données d'un employé. 
+2. Les données sont validées par Pydantic (modèle `EmployeeData`). 
+3. Les données sont prétraitées (encodage catégoriel, feature engineering, nettoyage de corrélation) via le pipeline scikit-learn. 
+4. Le modèle LogisticRegression pré-entraîné effectue la prédiction et calcule la probabilité 
+5. La prédiction est sauvegardée en base PostgreSQL (hors production)
+6. L'API retourne une réponse JSON contenant l'`employee_id`, la `prediction` et la `probability`.
 
 ## 4. Installation et démarrage
 
@@ -271,20 +226,9 @@ Transformer personnalisé `TechnovaCorrelationCleaning` qui supprime les feature
 ### Lancer les tests
 
 ```bash
-uv run python -m pytest tests/test_main.py
+uv run python -m pytest tests/test_api.py
+uv run python -m pytest tests/test_training.py
 ```
-
-### Suite de tests (`tests/test_main.py`)
-
-| Test | Description | Vérification |
-|---|---|---|
-| `test_health` | Health check | `GET /health` → HTTP 200, `{"message": "Alive !"}` |
-| `test_predict_with_wrong_api_key` | Rejet clé invalide | `POST /predict` avec mauvaise clé → HTTP 403 |
-| `test_predict` | Prédiction valide | `POST /predict` avec données réelles → HTTP 200, champs `prediction`, `probability`, `employee_id` présents |
-
-### Données de test
-
-La fonction helper `get_random_employee()` fusionne les trois fichiers CSV et sélectionne un employé aléatoire pour alimenter les tests.
 
 ### Configuration CI
 
@@ -298,31 +242,6 @@ Les tests s'exécutent automatiquement sur GitHub Actions à chaque push sur `de
 |---|---|---|
 | `develop` | `test.yml` | Exécute les tests uniquement |
 | `main` | `test_and_deploy.yml` | Exécute les tests + déploie sur Hugging Face |
-
-### Pipeline `develop` — `.github/workflows/test.yml`
-
-```
-push sur develop
-    │
-    ├── Checkout du code (avec Git LFS)
-    ├── Installation de uv
-    ├── Copie de .env.example → .env
-    ├── Configuration Python 3.12
-    ├── Installation des dépendances (uv sync)
-    └── Exécution de pytest tests/test_main.py
-```
-
-### Pipeline `main` — `.github/workflows/test_and_deploy.yml`
-
-```
-push sur main
-    │
-    ├── [Mêmes étapes de test que develop]
-    │
-    └── Déploiement sur Hugging Face Spaces
-            ├── Utilise HF_TOKEN (secret GitHub)
-            └── Utilise HF_SPACE_ID (variable GitHub)
-```
 
 ### Secrets et variables GitHub Actions requis
 

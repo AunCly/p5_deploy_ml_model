@@ -31,7 +31,7 @@ jobs:
       - name: Run tests
         env:
           API_KEY: ${{ secrets.API_KEY }}
-        run: uv run python -m pytest tests/test_main.py
+        run: uv run python -m pytest tests/test_api.py
 
   deploy:
     needs: test
