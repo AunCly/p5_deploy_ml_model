@@ -22,3 +22,6 @@ dependencies = [
     "shap>=0.52.0",
     "sqlalchemy>=2.0.51",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
