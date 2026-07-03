@@ -24,14 +24,18 @@ def create_database():
     except Exception as e:
         print(f"Une erreur est survenue lors de l'exécution de la base de données : {e}")
 
-def save_prediction(employee, prediction):
+def save_prediction(employee, result):
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(
             text(
-                "INSERT INTO predictions (employee_data, prediction) VALUES (:employee_data, :prediction)"
+                "INSERT INTO predictions (employee_data, prediction, probability) VALUES (:employee_data, :prediction, :probability)"
             ),
-            {"employee_data": employee, "prediction": prediction},
+            {
+                "employee_data": employee,
+                "prediction": result['prediction'],
+                "probability": result['probability']
+            },
         )
 
 

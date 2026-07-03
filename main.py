@@ -20,7 +20,7 @@ def api_predict(employee: EmployeeData):
 
     try:
         if os.getenv('ENVIRONMENT') != 'production':
-            database.save_prediction(employee.model_dump_json(), result['probability'])
+            database.save_prediction(employee.model_dump_json(), result)
     except Exception as e:
         print(f"Erreur lors de l'enregistrement de la prédiction : {e}")
 
