@@ -39,3 +39,11 @@ Tout en réfléchissant, vous dressez la liste des livrables que vous aurez à c
   
 - **Une configuration du pipeline CI/CD** capable de gérer les environnements  (dev test, prod) et intégrer la gestion des secrets.
     - Un fichier YAML (par exemple pour GitHub Actions) qui automatise les tests et le déploiement
+
+## Dêpot Git
+
+Url du dépôt Git : [https://github.com/AunCly/p5_deploy_ml_model](https://github.com/AunCly/p5_deploy_ml_model)
+
+## Documentation technique
+[DOCUMENTATION.md](DOCUMENTATION.md)
+
