@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-import database.database as database
+import database.database_manager as database
 
 def seed():
 

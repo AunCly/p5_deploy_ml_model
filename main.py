@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
 
 from employee import EmployeeData
-from database import database as database
+from database import database_manager as database
 from database import seeding as seeding
 from contextlib import asynccontextmanager
 
@@ -19,7 +19,8 @@ def api_predict(employee: EmployeeData):
     result = predictor.predict(employee)
 
     try:
-        database.save_prediction(employee.model_dump_json(), result['probability'])
+        if os.getenv('ENVIRONMENT') != 'production':
+            database.save_prediction(employee.model_dump_json(), result['probability'])
     except Exception as e:
         print(f"Erreur lors de l'enregistrement de la prédiction : {e}")
 
@@ -31,8 +32,9 @@ def api_predict(employee: EmployeeData):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    database.create_database()
-    seeding.seed()
+    if os.getenv('ENVIRONMENT') != 'production':
+        database.create_database()
+        seeding.seed()
     yield
 
 app = FastAPI(
