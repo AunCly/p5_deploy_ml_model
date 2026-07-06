@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from dotenv import load_dotenv
@@ -94,3 +95,22 @@ class TestApi:
         response = client.post("/predict/batch", json=random_employees.to_dict(orient='records'), headers={"x-api-key": os.getenv('API_KEY')})
 
         assert response.status_code == 422
+
+    def test_history(self):
+        with patch('database.database_manager.get_predictions', return_value=[]):
+            response = client.get("/predict/history", headers={"x-api-key": os.getenv('API_KEY')})
+            assert response.status_code == 200
+            assert isinstance(response.json(), list)
+
+    def test_history_with_wrong_api_key(self):
+        response = client.get("/predict/history", headers={"x-api-key": "wrong"})
+        assert response.status_code == 403
+
+    def test_lifespan_non_production(self):
+        with patch('database.database_manager.create_database') as mock_create:
+            with patch('database.seeding.seed') as mock_seed:
+                with patch.dict(os.environ, {'ENVIRONMENT': 'development'}):
+                    with TestClient(app):
+                        pass
+                mock_create.assert_called_once()
+                mock_seed.assert_called_once()
