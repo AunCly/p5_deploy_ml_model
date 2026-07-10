@@ -71,5 +71,6 @@ class TestInitDatabase:
             with patch('database.seeding.seed') as mock_seed:
                 if 'database.init_database' in sys.modules:
                     del sys.modules['database.init_database']
+                import database.init_database
                 mock_create.assert_called_once()
                 mock_seed.assert_called_once()
